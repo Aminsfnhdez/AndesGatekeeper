@@ -1,0 +1,17 @@
+section{
+    // @apply bg-gray-900; //bg-gray-900
+    height: 100vh;
+    width: 100vw;
+    background-image: url('../../../../../public/assets/logo_andes-transformed.png');
+    background-repeat: no-repeat;
+    background-position: center;
+    --tw-bg-opacity: 1;
+    background-color: rgb(107 114 128 / var(--tw-bg-opacity));
+    background-blend-mode: multiply;
+    background-size: cover;
+
+}
+
+:root{
+    color-scheme: dark light;
+}
