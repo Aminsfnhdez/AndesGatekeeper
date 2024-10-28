@@ -1,11 +1,11 @@
 import { Component, inject } from '@angular/core';
 import { AuthStateService } from '../../../shared/data-access/auth-state.service';
-import { Router } from '@angular/router';
+import { Router, RouterLink, RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-lista-docentes',
   standalone: true,
-  imports: [],
+  imports: [RouterModule, RouterLink],
   templateUrl: './lista-docentes.component.html',
   styleUrl: './lista-docentes.component.scss'
 })
