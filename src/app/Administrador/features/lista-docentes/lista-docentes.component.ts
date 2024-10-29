@@ -1,11 +1,12 @@
 import { Component, inject } from '@angular/core';
 import { AuthStateService } from '../../../shared/data-access/auth-state.service';
 import { Router, RouterLink, RouterModule } from '@angular/router';
+import UsersComponent from '../users/users.component';
 
 @Component({
   selector: 'app-lista-docentes',
   standalone: true,
-  imports: [RouterModule, RouterLink],
+  imports: [RouterModule, RouterLink, UsersComponent],
   templateUrl: './lista-docentes.component.html',
   styleUrl: './lista-docentes.component.scss'
 })
@@ -17,4 +18,5 @@ export default class ListaDocentesComponent {
     await this._authState.logOut();
     this._router.navigateByUrl('/auth/sign-in');
   }
+  
 }
