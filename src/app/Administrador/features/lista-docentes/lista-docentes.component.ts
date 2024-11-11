@@ -28,7 +28,8 @@ export default class ListaDocentesComponent {
   private _authState = inject(AuthStateService);
   private _router = inject(Router);
   private _firestore = inject(Firestore);
- 
+  Math = Math;
+
   nuevoDocente: Docente = {
     nombre: '',
     documento: 0,
@@ -46,6 +47,9 @@ export default class ListaDocentesComponent {
   searchTerm: string = '';
 
   docenteSeleccionado: Docente | null = null;
+
+  page: number = 1;
+  pageSize: number = 8;
 
   constructor() {
     this.obtenerDocentes();
