@@ -17,12 +17,10 @@ interface Docente {
 @Component({
   selector: 'app-lista-docentes',
   standalone: true,
-  imports: [RouterModule,CommonModule, FormsModule],
+  imports: [RouterModule,CommonModule, FormsModule,RouterLink],
   templateUrl: './lista-docentes.component.html',
   styleUrl: './lista-docentes.component.scss'
 })
-
-
 export default class ListaDocentesComponent {
 
   private _authState = inject(AuthStateService);

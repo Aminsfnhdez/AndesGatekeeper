@@ -52,7 +52,7 @@ export default class SignInComponent {
     await this._authService.signIn({email, password});  
     
     toast.success('Hola nuevamente');
-    this._router.navigateByUrl('/administrador'); // acá se debe corregir por perfiles y que lleve al 'home'
+    this._router.navigateByUrl('/administrador/docentes'); 
     } catch (error) {
       toast.error('Ocurrio un error')
     }

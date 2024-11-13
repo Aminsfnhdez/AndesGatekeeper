@@ -7,6 +7,14 @@ export default [
     loadComponent: () => import('./lista-docentes/lista-docentes.component'),
   },
   {
+    path: 'reportes',
+    loadComponent: () => import('./reportes/reportes.component'),
+  },
+  {
+    path: 'docentes',
+    loadComponent: () => import('./lista-docentes/lista-docentes.component'),
+  },
+  {
     path: 'users',
     loadComponent: () => import('./users/users.component'),
   }
