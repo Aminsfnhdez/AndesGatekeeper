@@ -135,6 +135,8 @@ export default class ListaDocentesComponent {
       this.docentes = this.docentes.filter(docente => 
         docente.nombre.toLowerCase().includes(this.searchTerm.toLowerCase())
       );
+    }else{
+      this.obtenerDocentes();
     }
   }
 

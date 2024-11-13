@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { getDocs } from '@angular/fire/firestore';
+import { addDoc, getDocs } from '@angular/fire/firestore';
 import { collection, query, Firestore, where } from '@angular/fire/firestore';
 import { toast } from 'ngx-sonner';
 import { RouterLink } from '@angular/router';
@@ -68,5 +68,28 @@ export default class AsistenciasComponent {
     this.documentoInput = docente.documento;
     this.nombreDocente = docente.nombre;
     this.docentesSugeridos = [];
+  }
+
+  async registrarAsistencia() {
+    try {
+      const asistenciaRef = collection(this.firestore, 'Asistencias');
+      await addDoc(asistenciaRef, {
+        documento: this.documentoInput,
+        nombre: this.nombreDocente,
+        tipo: this.tipoRegistro,
+        fecha: this.fechaActual
+      });
+
+      toast.success('Asistencia registrada correctamente');
+      
+      // Limpiar el formulario
+      this.documentoInput = '';
+      this.nombreDocente = '';
+      this.tipoRegistro = null;
+      
+    } catch (error) {
+      console.error('Error al registrar asistencia:', error);
+      toast.error('Error al registrar la asistencia. Por favor intente nuevamente.');
+    }
   }
 }
