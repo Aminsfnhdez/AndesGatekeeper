@@ -6,6 +6,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
+import { toast } from 'ngx-sonner';
 
 
 @Component({
@@ -28,9 +29,98 @@ export default class ReportesComponent {
   fechaInicio: Date | null = null;
   fechaFin: Date | null = null;
   reportesOriginales: any[] = [];
+  reportesProcesados: any[] = [];
+  docentes: any[] = [];
 
   constructor() {
     this.obtenerAsistencias();
+  }
+
+  ngOnInit() {
+    this.cargarDocentes();
+    this.cargarReportes();
+  }
+
+  async cargarDocentes() {
+    try {
+      const docentesRef = collection(this._firestore, 'Docentes');
+      const docentesSnapshot = await getDocs(docentesRef);
+      this.docentes = docentesSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+    } catch (error) {
+      console.error('Error al cargar docentes:', error);
+    }
+  }
+
+  async cargarReportes() {
+    try {
+      const reportesRef = collection(this._firestore, 'Asistencias');
+      const reportesSnapshot = await getDocs(reportesRef);
+      
+      const registrosPorDocenteYFecha = new Map();
+      
+      reportesSnapshot.docs.forEach(doc => {
+        const data = doc.data();
+        const documento = data['documentoDocente'];
+        const fechaTimestamp = data['fecha'];
+        const horaEntrada = data['horaEntrada'];
+        const horaSalida = data['horaSalida'];
+        const nombre = data['nombreDocente'];
+        const entrada = data['entrada'];
+        const salida = data['salida'];
+        
+        const key = `${documento}_${fechaTimestamp.toDate().toDateString()}`;
+        
+        if (!registrosPorDocenteYFecha.has(key)) {
+          const horasLaboradas = entrada && salida 
+            ? this.calcularHorasLaboradas(horaEntrada, horaSalida) 
+            : null;
+
+          registrosPorDocenteYFecha.set(key, {
+            documento: documento,
+            nombre: nombre,
+            fecha: fechaTimestamp,  // fecha del día para mostrar y ordenar
+            horaEntrada: horaEntrada,
+            horaSalida: horaSalida, // Se permite que sea null si no hay salida
+            horasLaboradas: horasLaboradas // Se calcula solo si hay entrada y salida válidas
+          });
+        }
+        
+      });
+
+      this.reportes = Array.from(registrosPorDocenteYFecha.values())
+        .sort((a, b) => {
+          if (a.documento !== b.documento) {
+            return a.documento.localeCompare(b.documento);
+          }
+          return a.fecha.toDate() - b.fecha.toDate();
+        });
+
+      this.reportesProcesados = [...this.reportes];
+      this.reportesOriginales = [...this.reportes];
+    } catch (error) {
+      toast.error(`Error al cargar reportes: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+    }
+  }
+
+  private calcularHorasLaboradas(horaEntrada: string, horaSalida: string): string {
+    const [hE, mE, sE] = horaEntrada.split(':').map(Number);
+    const [hS, mS, sS] = horaSalida.split(':').map(Number);
+
+    const entrada = new Date();
+    entrada.setHours(hE, mE, sE);
+
+    const salida = new Date();
+    salida.setHours(hS, mS, sS);
+
+    const diferencia = salida.getTime() - entrada.getTime();
+    
+    const horas = Math.floor(diferencia / (1000 * 60 * 60));
+    const minutos = Math.floor((diferencia % (1000 * 60 * 60)) / (1000 * 60));
+    
+    return `${horas} horas y ${minutos} minutos`;
   }
 
   filtrarReportes(event: Event): void {
