@@ -78,13 +78,18 @@ export default class ReportesComponent {
             ? this.calcularHorasLaboradas(horaEntrada, horaSalida) 
             : null;
 
+          const estado = horasLaboradas && this.convertirHorasAHorasDecimal(horasLaboradas) < 6 
+            ? 'Incompleto' 
+            : 'Completo';
+
           registrosPorDocenteYFecha.set(key, {
             documento: documento,
             nombre: nombre,
             fecha: fechaTimestamp,  // fecha del día para mostrar y ordenar
             horaEntrada: horaEntrada,
             horaSalida: horaSalida, // Se permite que sea null si no hay salida
-            horasLaboradas: horasLaboradas // Se calcula solo si hay entrada y salida válidas
+            horasLaboradas: horasLaboradas, // Se calcula solo si hay entrada y salida válidas
+            estado: estado // Se agrega el estado
           });
         }
         
@@ -121,6 +126,11 @@ export default class ReportesComponent {
     const minutos = Math.floor((diferencia % (1000 * 60 * 60)) / (1000 * 60));
     
     return `${horas} horas y ${minutos} minutos`;
+  }
+
+  private convertirHorasAHorasDecimal(horas: string): number {
+    const [horasLaboradas, minutosLaborados] = horas.split(' horas y ').map(part => parseInt(part));
+    return horasLaboradas + (minutosLaborados / 60);
   }
 
   filtrarReportes(event: Event): void {
