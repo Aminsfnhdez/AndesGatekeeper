@@ -89,7 +89,8 @@ export default class ReportesComponent {
             horaEntrada: horaEntrada,
             horaSalida: horaSalida, // Se permite que sea null si no hay salida
             horasLaboradas: horasLaboradas, // Se calcula solo si hay entrada y salida válidas
-            estado: estado // Se agrega el estado
+            estado: estado, // Se agrega el estado
+            
           });
         }
         
@@ -198,12 +199,15 @@ export default class ReportesComponent {
 
   descargarReporte() {
     // Preparar los datos para el reporte
-    const datosReporte = this.reportes.map(reporte => ({
-      Número: reporte.numero,
-      Docente: reporte.nombre,
-      Fecha: reporte.fecha?.toDate().toLocaleDateString(),
-      Hora: reporte.fecha?.toDate().toLocaleTimeString(),
-      Tipo_Registro: reporte.tipo
+    const datosReporte = this.reportes.map((reporte, index) => ({
+      Número: index + 1,
+      nombre: reporte.nombre,
+      documento: reporte.documento,
+      fecha: reporte.fecha?.toDate().toLocaleDateString(),
+      horaEntrada: reporte.horaEntrada,
+      horaSalida: reporte.horaSalida,
+      horasLaboradas: reporte.horasLaboradas,
+      estado: reporte.estado
     }));
 
     // Crear el libro de trabajo y la hoja
@@ -218,6 +222,10 @@ export default class ReportesComponent {
       rangoFechas = `desde ${new Date(this.fechaInicio).toLocaleDateString()}`;
     } else if (this.fechaFin) {
       rangoFechas = `hasta ${new Date(this.fechaFin).toLocaleDateString()}`;
+    } else {
+      // Si no hay filtros de fechas, agregar marca de tiempo
+      const marcaTiempo = new Date().toLocaleString();
+      rangoFechas += ` - ${marcaTiempo}`;
     }
 
     // Determinar si hay filtro de docente
