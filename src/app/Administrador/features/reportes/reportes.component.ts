@@ -7,8 +7,8 @@ import { FormsModule } from '@angular/forms';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import { toast } from 'ngx-sonner';
-import { NotificationService } from '../../notificationService/notification.service'
-/* import * as cron from 'node-cron'; */
+/*import { NotificationService } from '../../notificationService/notification.service'
+ import * as cron from 'node-cron'; */
 
 
 @Component({
@@ -22,7 +22,7 @@ export default class ReportesComponent {
   private _authState = inject(AuthStateService);
   private _router = inject(Router);
   private _firestore = inject(Firestore);
-  private _notificationService = inject(NotificationService);
+  /* private _notificationService = inject(NotificationService); */
 
   reportes: any[] = [];
   page: number = 1;
@@ -60,7 +60,7 @@ export default class ReportesComponent {
         this.enviarNotificacionesMensual();
       }
     });
-  } */
+  } 
 
 
   private async enviarNotificacionesSemanal() {
@@ -148,7 +148,7 @@ export default class ReportesComponent {
       this._notificationService.enviarNotificacion(docente.email, mensaje, archivoXLSXFile).subscribe();
     });
   }
-
+*/
     async cargarDocentes() {
     try {
       const docentesRef = collection(this._firestore, 'Docentes');
