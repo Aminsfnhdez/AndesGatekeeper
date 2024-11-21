@@ -8,7 +8,7 @@ import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import { toast } from 'ngx-sonner';
 import { NotificationService } from '../../notificationService/notification.service'
-import * as cron from 'node-cron';
+/* import * as cron from 'node-cron'; */
 
 
 @Component({
@@ -45,8 +45,8 @@ export default class ReportesComponent {
     this.cargarReportes();
   }
 
-  //notificcioón por correo
-  private programarEnvioNotificaciones() {
+  //notificcioón por correo. Comentarios porque aun no se usa por la falta de presupuesto
+  /* private programarEnvioNotificaciones() {
     
     // Enviar notificaciones cada domingo a las 23:59
     cron.schedule('59 23 * * 0', () => {
@@ -60,7 +60,7 @@ export default class ReportesComponent {
         this.enviarNotificacionesMensual();
       }
     });
-  }
+  } */
 
 
   private async enviarNotificacionesSemanal() {
