@@ -7,6 +7,8 @@ import { FormsModule } from '@angular/forms';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import { toast } from 'ngx-sonner';
+import { NotificationService } from '../../notificationService/notification.service'
+import * as cron from 'node-cron';
 
 
 @Component({
@@ -20,6 +22,7 @@ export default class ReportesComponent {
   private _authState = inject(AuthStateService);
   private _router = inject(Router);
   private _firestore = inject(Firestore);
+  private _notificationService = inject(NotificationService);
 
   reportes: any[] = [];
   page: number = 1;
@@ -33,7 +36,8 @@ export default class ReportesComponent {
   docentes: any[] = [];
 
   constructor() {
-    this.obtenerAsistencias();
+    this.obtenerAsistencias(); 
+    // this.programarEnvioNotificaciones(); //Aún no hay servicio para eso entonces  no se usa
   }
 
   ngOnInit() {
@@ -41,7 +45,111 @@ export default class ReportesComponent {
     this.cargarReportes();
   }
 
-  async cargarDocentes() {
+  //notificcioón por correo
+  private programarEnvioNotificaciones() {
+    
+    // Enviar notificaciones cada domingo a las 23:59
+    cron.schedule('59 23 * * 0', () => {
+      this.enviarNotificacionesSemanal();
+    });
+
+    // Enviar notificaciones el último día del mes a las 23:59
+    cron.schedule('59 23 28-31 * *', () => {
+      const today = new Date();
+      if (today.getDate() === new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate()) {
+        this.enviarNotificacionesMensual();
+      }
+    });
+  }
+
+
+  private async enviarNotificacionesSemanal() {
+    this.docentes.forEach((docente) => {
+      const mensaje = `Hola ${docente.nombre},\n\nAquí está tu informe de asistencias de la semana.`;
+      const datosReporte = this.reportes.map((reporte, index) => {
+        const fechaTimestamp = reporte.fecha;
+        const horaEntrada = reporte.horaEntrada;
+        const horaSalida = reporte.horaSalida;
+        const entrada = horaEntrada && horaEntrada !== null;
+        const salida = horaSalida && horaSalida !== null;
+        const horasLaboradas = entrada && salida 
+          ? this.calcularHorasLaboradas(horaEntrada, horaSalida) 
+          : null;
+
+        const estado = horasLaboradas && this.convertirHorasAHorasDecimal(horasLaboradas) >= 6
+          ? 'Completo' 
+          : 'Incompleto';
+        return {
+          indice: index + 1,
+          nombre: reporte.nombre,
+          documento: reporte.documento,
+          fecha: fechaTimestamp,  // fecha del día para mostrar y ordenar
+          horaEntrada: horaEntrada,
+          horaSalida: horaSalida, // Se permite que sea null si no hay salida
+          horasLaboradas: horasLaboradas, // Se calcula solo si hay entrada y salida válidas
+          estado: estado, // Se agrega el estado
+        };
+      });
+
+      // Crear el libro de trabajo y la hoja
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(datosReporte);
+      XLSX.utils.book_append_sheet(wb, ws, 'Reporte');
+
+      // Generar el archivo XLSX
+      const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+      const archivoXLSX = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const archivoXLSXFile = new File([archivoXLSX], 'reporte_asistencias_semanal.xlsx'); // Crear un archivo a partir del Blob
+
+      // Enviar el archivo XLSX
+      this._notificationService.enviarNotificacion(docente.email, mensaje, archivoXLSXFile).subscribe();
+    });
+  }
+
+  private async enviarNotificacionesMensual() {
+    this.docentes.forEach((docente) => {
+      const mensaje = `Hola ${docente.nombre},\n\nAquí está tu informe de asistencias del mes.`;
+      const datosReporte = this.reportes.map((reporte, index) => {
+        const fechaTimestamp = reporte.fecha;
+        const horaEntrada = reporte.horaEntrada;
+        const horaSalida = reporte.horaSalida;
+        const entrada = horaEntrada && horaEntrada !== null;
+        const salida = horaSalida && horaSalida !== null;
+        const horasLaboradas = entrada && salida 
+          ? this.calcularHorasLaboradas(horaEntrada, horaSalida) 
+          : null;
+
+        const estado = horasLaboradas && this.convertirHorasAHorasDecimal(horasLaboradas) >= 6
+          ? 'Completo' 
+          : 'Incompleto';
+        return {
+          indice: index + 1,
+          nombre: reporte.nombre,
+          documento: reporte.documento,
+          fecha: fechaTimestamp,  // fecha del día para mostrar y ordenar
+          horaEntrada: horaEntrada,
+          horaSalida: horaSalida, // Se permite que sea null si no hay salida
+          horasLaboradas: horasLaboradas, // Se calcula solo si hay entrada y salida válidas
+          estado: estado, // Se agrega el estado
+        };
+      });
+
+      // Crear el libro de trabajo y la hoja
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(datosReporte);
+      XLSX.utils.book_append_sheet(wb, ws, 'Reporte');
+
+      // Generar el archivo XLSX
+      const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+      const archivoXLSX = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const archivoXLSXFile = new File([archivoXLSX], 'reporte_asistencias_mensual.xlsx'); // Crear un archivo a partir del Blob
+
+      // Enviar el archivo XLSX
+      this._notificationService.enviarNotificacion(docente.email, mensaje, archivoXLSXFile).subscribe();
+    });
+  }
+
+    async cargarDocentes() {
     try {
       const docentesRef = collection(this._firestore, 'Docentes');
       const docentesSnapshot = await getDocs(docentesRef);
@@ -90,7 +198,6 @@ export default class ReportesComponent {
             horaSalida: horaSalida, // Se permite que sea null si no hay salida
             horasLaboradas: horasLaboradas, // Se calcula solo si hay entrada y salida válidas
             estado: estado, // Se agrega el estado
-            
           });
         }
         
