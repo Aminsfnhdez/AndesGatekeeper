@@ -243,12 +243,13 @@ export default class ReportesComponent {
 
   filtrarReportes(event: Event): void {
     const searchTerm = (event.target as HTMLInputElement).value;
-    if (searchTerm) {
+    if (searchTerm && searchTerm !== 'Seleccionar docente') {
       this.reportes = this.reportes.filter((reporte) =>
         reporte.nombre.toLowerCase().includes(searchTerm.toLowerCase())
       );
+      this.reportesProcesados = [...this.reportes]; // Actualizar reportesProcesados después del filtrado
     } else {
-      // Si no hay término de búsqueda, recargar todos los reportes
+      // Si no hay término de búsqueda o está seleccionado 'Seleccionar docente', recargar todos los reportes
       this.obtenerAsistencias();
     }
   }
@@ -257,27 +258,34 @@ export default class ReportesComponent {
     if (!this.fechaInicio && !this.fechaFin) {
       // Si no hay fechas seleccionadas, mostrar todos los reportes
       this.reportes = [...this.reportesOriginales];
+      this.reportesProcesados = [...this.reportes]; // Actualizar reportesProcesados
       return;
     }
-
+    /* toast.warning(`Las fechas son: ${this.fechaInicio} ${this.fechaFin}`); */
     this.reportes = this.reportesOriginales.filter((reporte) => {
       const fechaReporte = reporte.fecha?.toDate();
       if (!fechaReporte) return false;
 
-      // Convertir fechas a objetos Date
+      // Asegurar de que las fechas no sean nulas antes de procesarlas
       const inicio = this.fechaInicio ? new Date(this.fechaInicio) : null;
       const fin = this.fechaFin ? new Date(this.fechaFin) : null;
 
-      // Ajustar la hora de las fechas para comparación correcta
-      if (inicio) inicio.setHours(0,0,0,0);
-      if (fin) fin.setHours(23,59,59,999);
-      
-      // Validar que la fecha del reporte esté en el rango
-      const cumpleInicio = !inicio || fechaReporte >= inicio;
-      const cumpleFin = !fin || fechaReporte <= fin;
+      // Normalizar las fechas para comparar solo el día, mes y año
+      const fechaReporteSinHora = new Date(fechaReporte.getFullYear(), fechaReporte.getMonth(), fechaReporte.getDate());
+      const inicioSinHora = inicio ? new Date(inicio.getFullYear(), inicio.getMonth(), inicio.getDate()) : null;
+      const finSinHora = fin ? new Date(fin.getFullYear(), fin.getMonth(), fin.getDate()) : null;
 
-      return cumpleInicio && cumpleFin;
+      // Validar que la fecha del reporte esté en el rango
+      const cumpleInicio = !inicioSinHora || fechaReporteSinHora >= inicioSinHora;
+      const cumpleFin = !finSinHora || fechaReporteSinHora <= finSinHora;
+
+      // Asegurar de que ambas condiciones se cumplan
+      const resultado = cumpleInicio && cumpleFin;
+      return resultado;
     });
+
+    // Actualizar reportesProcesados después del filtrado
+    this.reportesProcesados = [...this.reportes];
   }
 
   async logOut() {

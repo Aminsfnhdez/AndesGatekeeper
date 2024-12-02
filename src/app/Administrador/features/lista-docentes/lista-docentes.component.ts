@@ -35,6 +35,8 @@ export default class ListaDocentesComponent {
   private _router = inject(Router);
   private _firestore = inject(Firestore);
   Math = Math;
+  hoverEditar = false;
+  hoverEliminar = false;
 
   nuevoDocente: Docente = {
     nombre: '',
@@ -75,7 +77,7 @@ export default class ListaDocentesComponent {
         });
       });
     } catch (error) {
-      console.error('Error al obtener docentes:', error);
+      toast.error(`Error al obtener docentes: ${error instanceof Error ? error.message : 'Error desconocido'}`);
     }
   }
 
@@ -97,12 +99,15 @@ export default class ListaDocentesComponent {
         !docenteData.grado ||
         !docenteData.correo
       ) {
-        console.error('Todos los campos son requeridos');
+        toast.error('Todos los campos son requeridos');
         return;
       }
 
       const docentesRef = collection(this._firestore, 'Docentes');
       await addDoc(docentesRef, docenteData);
+
+      // Mostrar mensaje de éxito
+      toast.success('Docente agregado correctamente');
 
       // Limpiar el formulario
       this.nuevoDocente = {
@@ -122,7 +127,7 @@ export default class ListaDocentesComponent {
         modal.classList.add('hidden');
       }
     } catch (error) {
-      console.error('Error al agregar docente:', error);
+      toast.error(`Error al agregar docentes: ${error instanceof Error ? error.message : 'Error desconocido'}`);
     }
   }
 
@@ -155,8 +160,9 @@ export default class ListaDocentesComponent {
       const docenteRef = doc(this._firestore, 'Docentes', id);
       await deleteDoc(docenteRef);
       await this.obtenerDocentes();
+      toast.success('Docente eliminado correctamente');
     } catch (error) {
-      console.error('Error al eliminar docente:', error);
+      toast.error(`Error al eliminar docente: ${error instanceof Error ? error.message : 'Error desconocido'}`);
     }
   }
 
@@ -170,7 +176,7 @@ export default class ListaDocentesComponent {
   async editarDocente() {
     try {
       if (!this.docenteSeleccionado?.id) {
-        console.error('ID de docente no encontrado');
+        toast.error('ID de docente no encontrado')
         return;
       }
 
@@ -187,6 +193,9 @@ export default class ListaDocentesComponent {
         correo: this.docenteSeleccionado.correo,
       });
 
+      // Mostrar mensaje de éxito
+      toast.success('Docente editado correctamente');
+
       // Actualizar lista de docentes
       await this.obtenerDocentes();
 
@@ -196,7 +205,7 @@ export default class ListaDocentesComponent {
         modal.classList.add('hidden');
       }
     } catch (error) {
-      console.error('Error al editar docente:', error);
+      toast.error(`Error al editar docente: ${error instanceof Error ? error.message : 'Error desconocido'}`);
     }
   }
 
